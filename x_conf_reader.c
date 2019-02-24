@@ -68,10 +68,10 @@ void find_configs(void *data, unsigned int size){
 #define RB_ID_SOFT_11		11
 #define RB_ID_CPU_FREQ		12
 #define RB_ID_BOOTER		13
-void read_soft_config(void *data, size_t buflen){
+void read_config(void *data, size_t cfg_offset, size_t buflen){
 	int id;
 	int len;
-	unsigned char *buf = data + soft_cfg_offset;
+	unsigned char *buf = data + cfg_offset;
 	/* skip magic and CRC value */
 	buf += 8;
 	buflen -= 8;
@@ -91,6 +91,10 @@ void read_soft_config(void *data, size_t buflen){
 		buf += len;
 		buflen -= len;
 	}
+}
+void read_soft_config(void *data, size_t buflen){
+	printf("Soft config tags:\n");
+	read_config(data, soft_cfg_offset, buflen);
 }
 
 unsigned char data[2*1024*1024];
@@ -120,6 +124,7 @@ int main(void){
 		return -2;
 	}
 	find_configs(data, sizeof(data));
+	printf("\n");
 	read_soft_config(data, 0x1000);
 
 	return 0;
