@@ -13,6 +13,11 @@
 #define u16 uint16_t
 #define u32 uint32_t
 
+#define uint8 uint8_t
+#define uint16 uint16_t
+#define uint32 uint32_t
+#include "ptable.h"
+
 #define DO_ENDIANS_CONV 0
 
 static u32 get_u32(void *buf)
@@ -26,15 +31,18 @@ static u32 get_u32(void *buf)
 #endif
 }
 
+//#define RB_BLOCK_SIZE		0x100
 #define RB_BLOCK_SIZE		0x1000
 #define RB_MAGIC_HARD	0x64726148 /* "Hard" */
 #define RB_MAGIC_SOFT	0x74666F53 /* "Soft" */
 #define RB_MAGIC_DAWN	0x6E776144 /* "Dawn" */
 #define RB_MAGIC_DTS	0xEDFE0DD0 /* "DTS" */
-#define ELF_MAGIC	0x464C457F 		 /* "ELF" */
+#define ELF_MAGIC			0x464C457F /* "ELF" */
+#define MIBIB_MAGIC		0xFE569FAC /* MIBIB */
 
 static u32 hard_cfg_offset = 0;
 static u32 soft_cfg_offset = 0;
+static u32 mibib_block_offset = 0;
 
 void find_configs(void *data, unsigned int size){
 	unsigned int offset;
@@ -58,6 +66,11 @@ void find_configs(void *data, unsigned int size){
 			break;
 		case ELF_MAGIC:
 			printf("ELF header detected at 0x%x\n", offset);
+			break;
+		case MIBIB_MAGIC:
+			printf("MIBIB block detected at 0x%x\n", offset);
+			if(mibib_block_offset == 0) //comment it for second block
+				mibib_block_offset = offset;
 			break;
 		}
 	}
@@ -109,6 +122,60 @@ void read_soft_config(void *data, size_t buflen){
 	read_config(data, soft_cfg_offset, buflen);
 }
 
+//https://github.com/forth32/qtools/blob/master/ptable.h
+void read_mibib_block(void *data, size_t buflen, int in_dts){
+	unsigned char *buf = data + mibib_block_offset;
+	u32 *p = (void*)buf + 0x100;
+	struct flash_partition_entry *part = NULL;
+	int a;
+	int numparts = 0;
+	printf("MIBIB(0x%08x):\n", mibib_block_offset);
+	if(*(p++) != FLASH_PART_MAGIC1){
+		printf("  FLASH_PART_MAGIC1 - MISMATCH\n");
+		return;
+	}
+	printf("  FLASH_PART_MAGIC1 - OK\n");
+	if(*(p++) != FLASH_PART_MAGIC2){
+		printf("  FLASH_PART_MAGIC2 - MISMATCH\n");
+		return;
+	}
+	printf("  FLASH_PART_MAGIC2 - OK\n");
+	printf("  Version - %d\n", *(p++));
+	numparts = *(p++);
+	if(numparts > FLASH_NUM_PART_ENTRIES){
+		printf("  Numparts - OWERFLOW! (%d > %d)\n", numparts, FLASH_NUM_PART_ENTRIES);
+		return;
+	}
+	printf("  Numparts - %d\n", numparts);
+	if(!in_dts){
+		printf("  Parts list:\n");
+		//список разделов
+		part = (void*)p;
+		for(a = 0; a < numparts; a++, part++){
+			printf("    part %02d: %-15s offset = 0x%08x, len = 0x%x\n", a, part->name,
+				part->offset * 0x10000,
+				part->len * 0x10000);
+		}
+	}
+	if(in_dts){
+		printf("\n");
+		printf("  Parts list in DTS format:\n");
+		part = (void*)p;
+		for(a = 0; a < numparts; a++, part++){
+			u32 offset = part->offset * 0x10000;
+			u32 len = part->len * 0x10000;
+			char *name = part->name;
+			if(*name == '0' && *(name + 1) == ':')
+				name += 2;
+			printf("    %s@%x {\n", name, offset);
+			printf("      label = \"%s\";\n", name);
+			printf("      reg = <0x%08x 0x%x>;\n", offset, len);
+			printf("      read-only;\n");
+			printf("    }\n");
+		}
+	}
+}
+
 unsigned char data[2*1024*1024];
 int main(void){
 	int fd;
@@ -137,8 +204,11 @@ int main(void){
 		return -2;
 	}
 	find_configs(data, sizeof(data));
+	//printf("\n");
+	//read_soft_config(data, 0x1000);
 	printf("\n");
-	read_soft_config(data, 0x1000);
+	if(mibib_block_offset > 0)
+		read_mibib_block(data, 0x20000, 1);
 
 	return 0;
 }
