@@ -158,20 +158,24 @@ void read_mibib_block(void *data, size_t buflen, int in_dts){
 		}
 	}
 	if(in_dts){
+		char spaces[20];
 		printf("\n");
 		printf("  Parts list in DTS format:\n");
 		part = (void*)p;
+		for(a = 0; a < in_dts && a < sizeof(spaces); a++)
+			spaces[a] = '\t';
+		spaces[a] = '\0';
 		for(a = 0; a < numparts; a++, part++){
 			u32 offset = part->offset * 0x10000;
 			u32 len = part->len * 0x10000;
 			char *name = part->name;
 			if(*name == '0' && *(name + 1) == ':')
 				name += 2;
-			printf("    %s@%x {\n", name, offset);
-			printf("      label = \"%s\";\n", name);
-			printf("      reg = <0x%08x 0x%x>;\n", offset, len);
-			printf("      read-only;\n");
-			printf("    }\n");
+			printf("%s%s@%x {\n", spaces, name, offset);
+			printf("%s\tlabel = \"%s\";\n", spaces, name);
+			printf("%s\treg = <0x%08x 0x%x>;\n", spaces, offset, len);
+			printf("%s\tread-only;\n", spaces);
+			printf("%s}\n", spaces);
 		}
 	}
 }
@@ -208,7 +212,7 @@ int main(void){
 	//read_soft_config(data, 0x1000);
 	printf("\n");
 	if(mibib_block_offset > 0)
-		read_mibib_block(data, 0x20000, 1);
+		read_mibib_block(data, 0x20000, 6);
 
 	return 0;
 }
