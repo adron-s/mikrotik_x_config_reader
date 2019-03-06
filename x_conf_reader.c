@@ -175,7 +175,7 @@ void read_mibib_block(void *data, size_t buflen, int in_dts){
 			printf("%s\tlabel = \"%s\";\n", spaces, name);
 			printf("%s\treg = <0x%08x 0x%x>;\n", spaces, offset, len);
 			printf("%s\tread-only;\n", spaces);
-			printf("%s}\n", spaces);
+			printf("%s};\n", spaces);
 		}
 	}
 }
@@ -186,9 +186,9 @@ int main(void){
 	size_t len;
 	unsigned char *p = data;
 	ssize_t rest = sizeof(data);
-	//fd = open("./bins/rb450gx4.bin", O_RDONLY);
+	fd = open("./bins/rb450gx4.bin", O_RDONLY);
 	//fd = open("./bins/lhgg-60ad.bin", O_RDONLY);
-	fd = open("./bins/rb3011.bin", O_RDONLY);
+	//fd = open("./bins/rb3011.bin", O_RDONLY);
 	if(fd < 0){
 		perror("Can't open spi-nor.bin");
 		return -1;
