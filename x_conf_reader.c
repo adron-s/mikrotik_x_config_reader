@@ -31,6 +31,7 @@ static u32 get_u32(void *buf)
 #define RB_MAGIC_SOFT	0x74666F53 /* "Soft" */
 #define RB_MAGIC_DAWN	0x6E776144 /* "Dawn" */
 #define RB_MAGIC_DTS	0xEDFE0DD0 /* "DTS" */
+#define ELF_MAGIC	0x464C457F 		 /* "ELF" */
 
 static u32 hard_cfg_offset = 0;
 static u32 soft_cfg_offset = 0;
@@ -54,6 +55,9 @@ void find_configs(void *data, unsigned int size){
 			break;
 		case RB_MAGIC_DTS:
 			printf("DTS config detected at 0x%x\n", offset);
+			break;
+		case ELF_MAGIC:
+			printf("ELF header detected at 0x%x\n", offset);
 			break;
 		}
 	}
@@ -111,8 +115,9 @@ int main(void){
 	size_t len;
 	unsigned char *p = data;
 	ssize_t rest = sizeof(data);
-	fd = open("./spi-nor.bin", O_RDONLY);
-	//fd = open("./ex1/soft.bin", O_RDONLY);
+	//fd = open("./bins/rb450gx4.bin", O_RDONLY);
+	//fd = open("./bins/lhgg-60ad.bin", O_RDONLY);
+	fd = open("./bins/rb3011.bin", O_RDONLY);
 	if(fd < 0){
 		perror("Can't open spi-nor.bin");
 		return -1;
