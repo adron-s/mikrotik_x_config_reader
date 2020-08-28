@@ -1,0 +1,76 @@
+  Parts list in DTS format:
+	SBL1@0 {
+		label = "SBL1";
+		reg = <0x00000000 0x20000>;
+		read-only;
+	};
+	MIBIB@20000 {
+		label = "MIBIB";
+		reg = <0x00020000 0x20000>;
+		read-only;
+	};
+	SBL2@40000 {
+		label = "SBL2";
+		reg = <0x00040000 0x40000>;
+		read-only;
+	};
+	SBL3@80000 {
+		label = "SBL3";
+		reg = <0x00080000 0x80000>;
+		read-only;
+	};
+	DDRCONFIG@100000 {
+		label = "DDRCONFIG";
+		reg = <0x00100000 0x10000>;
+		read-only;
+	};
+	SSD@110000 {
+		label = "SSD";
+		reg = <0x00110000 0x10000>;
+		read-only;
+	};
+	TZ@120000 {
+		label = "TZ";
+		reg = <0x00120000 0x80000>;
+		read-only;
+	};
+	RPM@1a0000 {
+		label = "RPM";
+		reg = <0x001a0000 0x20000>;
+		read-only;
+	};
+	APPSBL@1c0000 {
+		label = "APPSBL";
+		reg = <0x001c0000 0x40000>;
+		read-only;
+	};
+	APPSBLENV@200000 {
+		label = "APPSBLENV";
+		reg = <0x00200000 0x40000>;
+		read-only;
+	};
+	ART@240000 {
+		label = "ART";
+		reg = <0x00240000 0x40000>;
+		read-only;
+	};
+	NSS0@280000 {
+		label = "NSS0";
+		reg = <0x00280000 0x100000>;
+		read-only;
+	};
+	NSS1@380000 {
+		label = "NSS1";
+		reg = <0x00380000 0x100000>;
+		read-only;
+	};
+	HLOS@480000 {
+		label = "HLOS";
+		reg = <0x00480000 0x200000>;
+		read-only;
+	};
+	rootfs@680000 {
+		label = "rootfs";
+		reg = <0x00680000 0xffff0000>;
+		read-only;
+	};

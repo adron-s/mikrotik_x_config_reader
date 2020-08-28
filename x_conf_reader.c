@@ -44,10 +44,25 @@ static u32 hard_cfg_offset = 0;
 static u32 soft_cfg_offset = 0;
 static u32 mibib_block_offset = 0;
 
+static int dump_num = 0;
+void dump_config(char *data, unsigned int size){
+	int fd;
+	char fname[32];
+	ssize_t wr_len;
+	sprintf(fname, "./dumps/%d.bin", dump_num++);
+	fd = open(fname, O_WRONLY | O_CREAT);
+	if(fd < 0){
+		perror("Can't dump!");
+		return;
+	}
+	wr_len = write(fd, data, size);
+	printf("   dumped %zd bytes to %s\n", wr_len, fname);
+}
+
 void find_configs(void *data, unsigned int size){
 	unsigned int offset;
 
-	for (offset = 0; offset < size; offset += RB_BLOCK_SIZE) {
+	for (offset = 0; offset < size; offset += 1) {
 		u32 magic;
 
 		magic = get_u32(data + offset);
@@ -55,11 +70,13 @@ void find_configs(void *data, unsigned int size){
 		case RB_MAGIC_HARD:
 			printf("Hard config detected at 0x%x\n", offset);
 			hard_cfg_offset = offset;
+			dump_config(data + offset, 0x1000);
 			break;
 
 		case RB_MAGIC_SOFT:
 			soft_cfg_offset = offset;
 			printf("Soft config detected at 0x%x\n", offset);
+			dump_config(data + offset, 0x1000);
 			break;
 		case RB_MAGIC_DTS:
 			printf("DTS config detected at 0x%x\n", offset);
@@ -68,6 +85,8 @@ void find_configs(void *data, unsigned int size){
 			printf("ELF header detected at 0x%x\n", offset);
 			break;
 		case MIBIB_MAGIC:
+			if(get_u32(data + offset + 0x100) != FLASH_PART_MAGIC1)
+				break;
 			printf("MIBIB block detected at 0x%x\n", offset);
 			if(mibib_block_offset == 0) //comment it for second block
 				mibib_block_offset = offset;
@@ -131,7 +150,7 @@ void read_mibib_block(void *data, size_t buflen, int in_dts){
 	int numparts = 0;
 	printf("MIBIB(0x%08x):\n", mibib_block_offset);
 	if(*(p++) != FLASH_PART_MAGIC1){
-		printf("  FLASH_PART_MAGIC1 - MISMATCH\n");
+		printf("  FLASH_PART_MAGIC1 - MISMATCH: 0x%x vs 0x%x\n", *(p++), FLASH_PART_MAGIC1);
 		return;
 	}
 	printf("  FLASH_PART_MAGIC1 - OK\n");
@@ -180,20 +199,22 @@ void read_mibib_block(void *data, size_t buflen, int in_dts){
 	}
 }
 
-unsigned char data[2*1024*1024];
+unsigned char data[17*1024*1024];
 int main(void){
 	int fd;
 	size_t len;
 	unsigned char *p = data;
 	ssize_t rest = sizeof(data);
-	fd = open("./bins/rb450gx4.bin", O_RDONLY);
-	//fd = open("./bins/lhgg-60ad.bin", O_RDONLY);
-	//fd = open("./bins/rb3011.bin", O_RDONLY);
+	//fd = open("./bins/rb450gx4.bin", O_RDONLY);
+	//fd = open("/home/prog/openwrt/work/rb962-us/mtd/mtdX1.EU", O_RDONLY);
+	fd = open("./bins/rb3011.bin", O_RDONLY);
+	//fd = open("./bins/old/rb3011.bin", O_RDONLY);
 	if(fd < 0){
-		perror("Can't open spi-nor.bin");
+		perror("Can't open file");
 		return -1;
 	}
 
+	memset(data, 0x0, sizeof(data));
 	while(rest > 0){
 		len = read(fd, p, rest);
 		if(len <= 0)
@@ -203,16 +224,19 @@ int main(void){
 	}
 	close(fd);
 
-	if(rest > 0){
-		fprintf(stderr, "Error reading data from spi-nor.bin\n");
+	/* if(rest > 0){
+		fprintf(stderr, "Error reading data from file. rest = %zd\n", rest);
 		return -2;
-	}
+	} */
 	find_configs(data, sizeof(data));
 	//printf("\n");
 	//read_soft_config(data, 0x1000);
+
 	printf("\n");
+	//mibib_block_offset = 0x20000;
+	//mibib_block_offset = 0x30000;
 	if(mibib_block_offset > 0)
-		read_mibib_block(data, 0x20000, 6);
+		read_mibib_block(data, 0x20000, 1);
 
 	return 0;
 }

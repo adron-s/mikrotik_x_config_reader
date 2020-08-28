@@ -1,4 +1,6 @@
 ex1/*
+dumps/*
+bins/*
 .*
 !.gitignore
 x_conf_reader
