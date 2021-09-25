@@ -80,6 +80,7 @@ void find_configs(void *data, unsigned int size){
 			break;
 		case RB_MAGIC_DTS:
 			printf("DTS config detected at 0x%x\n", offset);
+			dump_config(data + offset, 0x5a90);
 			break;
 		case ELF_MAGIC:
 			printf("ELF header detected at 0x%x\n", offset);
@@ -207,7 +208,7 @@ int main(void){
 	ssize_t rest = sizeof(data);
 	//fd = open("./bins/rb450gx4.bin", O_RDONLY);
 	//fd = open("/home/prog/openwrt/work/rb962-us/mtd/mtdX1.EU", O_RDONLY);
-	fd = open("./bins/rb3011.bin", O_RDONLY);
+	fd = open("/home/prog/openwrt/work/RB5009/dumps/mtdblock2.bin", O_RDONLY);
 	//fd = open("./bins/old/rb3011.bin", O_RDONLY);
 	if(fd < 0){
 		perror("Can't open file");
@@ -230,7 +231,7 @@ int main(void){
 	} */
 	find_configs(data, sizeof(data));
 	//printf("\n");
-	//read_soft_config(data, 0x1000);
+	read_soft_config(data, 0x1000);
 
 	printf("\n");
 	//mibib_block_offset = 0x20000;
